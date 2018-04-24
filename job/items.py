@@ -15,3 +15,5 @@ class JobItem(scrapy.Item):
     title = scrapy.Field() #标题
     date = scrapy.Field() #发布日期
     content = scrapy.Field() #内容
+    # phone = scrapy.Field() # 电话
+    # email = scrapy.Field() # 邮箱

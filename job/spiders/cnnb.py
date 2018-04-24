@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from job.items import JobItem
+import re
 
 
 class CnnbSpider(scrapy.Spider):
@@ -31,8 +32,16 @@ class CnnbSpider(scrapy.Spider):
         jobitem['date'] = response.xpath(
             '//*[@class="authi"]/em/span/@title').extract_first()
         jobitem['content'] = self._get_content(response)
+        # jobitem['phone'] = self._get_phone(jobitem['content'])
+        # jobitem['email'] = self._get_email(jobitem['content'])
         yield jobitem
 
     def _get_content(self, response):
         content = response.xpath('//td[@class="t_f"]//text()').extract()
         return ''.join(content).replace('\r', '').replace('\n', '')
+
+    def _get_phone(self, content):
+        return re.findall(r"([0?[13|14|15|18][0-9]{9}]|[[0-9-()（）]{7,18}])", content)
+
+    def _get_email(self, content):
+        return re.findall(r"(\w[-\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14})", content)
