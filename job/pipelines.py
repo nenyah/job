@@ -6,8 +6,9 @@
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
 import pymongo
-
+from scrapy import log
 from scrapy.conf import settings
+from scrapy.exceptions import DropItem
 
 
 class JobPipeline(object):

@@ -13,7 +13,8 @@ class JobItem(scrapy.Item):
     # name = scrapy.Field()
     link = scrapy.Field() #帖子连接
     title = scrapy.Field() #标题
-    date = scrapy.Field() #发布日期
+    pub_date = scrapy.Field() #发布日期
     content = scrapy.Field() #内容
-    # phone = scrapy.Field() # 电话
-    # email = scrapy.Field() # 邮箱
+    phone = scrapy.Field() # 电话
+    email = scrapy.Field() # 邮箱
+    crawl_date = scrapy.Field() #采集日期
