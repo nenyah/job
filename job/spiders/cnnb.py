@@ -38,6 +38,7 @@ class CnnbSpider(scrapy.Spider):
         '''
         jobitem = JobItem()
         jobitem['link'] = response.url
+        jobitem['author'] = self._get_author(response)
         jobitem['title'] = self._get_title(response)
         jobitem['pub_date'] = self._get_date(response)
         jobitem['content'] = self._get_content(response)
@@ -46,15 +47,23 @@ class CnnbSpider(scrapy.Spider):
         jobitem['crawl_date'] = datetime.today().strftime('%Y-%m-%d')
         yield jobitem
 
+    def _get_author(self, response):
+        '''
+        获取发贴人
+        @param response 下载的网页内容
+        return str 返回发贴人
+        '''
+        rule = '//*[@class="authi"]/a/text()'
+        return self._extract_info(rule,response)
+
     def _get_title(self, response):
         '''
         获取标题
         @param response 下载的网页内容
         return str 返回标题
         '''
-        title = response.xpath(
-            '//*[@id="thread_subject"]/text()').extract_first()
-        return title.strip()
+        rule = '//*[@id="thread_subject"]/text()'
+        return self._extract_info(rule,response)
 
     def _get_date(self, response):
         '''
@@ -62,11 +71,11 @@ class CnnbSpider(scrapy.Spider):
         @param response 下载的网页内容
         return str 返回日期
         '''
-        date = response.xpath(
-            '//*[@class="authi"]/em/span/@title').extract_first()
+        rule1 = '//*[@class="authi"]/em/span/@title'
+        rule2 = '//*[@class="authi"]/em/text()'
+        date = self._extract_info(rule1,response)
         if not date:
-            date = response.xpath(
-                '//*[@class="authi"]/em/text()').extract_first()
+            date = self._extract_info(rule2,response)
         return date.replace('发表于 ', '')
 
     def _get_content(self, response):
@@ -75,7 +84,8 @@ class CnnbSpider(scrapy.Spider):
         @param response 下载的网页内容
         return str 返回详情
         '''
-        content = response.xpath('//td[@class="t_f"]//text()').extract()
+        rule = '//*[@class="pl bm"]/div[1]//td[@class="t_f"]//text()'
+        content = response.xpath(rule).extract()
         return ' '.join((' '.join(i.split()) for i in content)).replace('\\r', '')
 
     def _get_phone(self, content):
@@ -84,7 +94,7 @@ class CnnbSpider(scrapy.Spider):
         @param response 解析的帖子详情
         return list 返回电话号码列表
         '''
-        regex = r"[86]?1[34578]\d{9}|0\d{2,3}[\s\-]?\d{7,8}"
+        regex = r'(?:13[\d]|14[579]|15[0-3,5-9]|16[6]|17[0135678]|18[0-9]|19[89])\d{8}|(?<=电话)(?:\d{4}[\-|\s])?\d{8}|(?<=电话：)(?:\d{4}[\-|\s])?\d{8}'
         return re.findall(regex, content)
 
     def _get_email(self, content):
@@ -93,6 +103,18 @@ class CnnbSpider(scrapy.Spider):
         @param response 解析的帖子详情
         return list 返回邮箱地址列表
         '''
-        regex = r"([a-zA-Z0-9_.+-]+@[a-pr-zA-PRZ0-9-]+\.[a-zA-Z0-9-.]+)"
+        regex = r"\w+\@\w+[\.\w+]+"
         email = re.findall(regex, content)
         return email
+
+    def _extract_info(self, rule, response):
+        '''
+        按抽取规则抽取内容
+        @param rule 规则
+        return str 返回内容
+        '''
+        content = response.xpath(rule).extract_first()
+        if content:
+            content = content.strip()
+        return content
+

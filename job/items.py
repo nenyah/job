@@ -12,6 +12,7 @@ class JobItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     link = scrapy.Field() #帖子连接
+    author = scrapy.Field() #发贴人
     title = scrapy.Field() #标题
     pub_date = scrapy.Field() #发布日期
     content = scrapy.Field() #内容
