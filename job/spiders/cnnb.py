@@ -11,8 +11,9 @@ class CnnbSpider(scrapy.Spider):
     name = "cnnb"
     allowed_domains = ["bbs.cnnb.com"]
     start_urls = [
-        'http://bbs.cnnb.com/forum.php?mod=forumdisplay&fid=37&filter=author&orderby=dateline&typeid=366&page=1',
-        'http://bbs.cnnb.com/forum.php?mod=forumdisplay&fid=37&filter=author&orderby=dateline&typeid=103&page=1']
+        'https://bbs.cnnb.com/forum.php?mod=forumdisplay&fid=37&typeid=103&filter=typeid&typeid=103&page=1',
+        'https://bbs.cnnb.com/forum.php?mod=forumdisplay&fid=37&typeid=366&filter=typeid&typeid=366&page=1'
+    ]
 
     def parse(self, response):
         '''
@@ -20,7 +21,7 @@ class CnnbSpider(scrapy.Spider):
         @param response 下载的网页内容
         '''
         # 解析帖子链接
-        links = response.xpath("//th/a[2]/@href").extract()
+        links = response.xpath("//*[contains(@id,'normalthread')]//th/a[2]/@href").extract()
 
         # 解析每一个连接的帖子内容
         for each in links:
@@ -53,8 +54,10 @@ class CnnbSpider(scrapy.Spider):
         @param response 下载的网页内容
         return str 返回发贴人
         '''
+        print(response.text)
         rule = '//*[@class="authi"]/a/text()'
-        return self._extract_info(rule,response)
+        return response.xpath(rule).extract_first()
+        # return self._extract_info(rule, response)
 
     def _get_title(self, response):
         '''
@@ -63,7 +66,7 @@ class CnnbSpider(scrapy.Spider):
         return str 返回标题
         '''
         rule = '//*[@id="thread_subject"]/text()'
-        return self._extract_info(rule,response)
+        return self._extract_info(rule, response)
 
     def _get_date(self, response):
         '''
@@ -71,22 +74,24 @@ class CnnbSpider(scrapy.Spider):
         @param response 下载的网页内容
         return str 返回日期
         '''
-        rule1 = '//*[@class="authi"]/em/span/@title'
+        rule1 = '//*[@class="plhin first"]//em/span/@title'
         rule2 = '//*[@class="authi"]/em/text()'
-        date = self._extract_info(rule1,response)
+        date = self._extract_info(rule1, response)
         if not date:
-            date = self._extract_info(rule2,response)
-        return date.replace('发表于 ', '')
-
+            date = self._extract_info(rule2, response)
+        if date:
+            return date.replace('发表于 ', '')
+        else:
+            return None
     def _get_content(self, response):
         '''
         获取帖子详情
         @param response 下载的网页内容
         return str 返回详情
         '''
-        rule = '//*[@class="pl bm"]/div[1]//td[@class="t_f"]//text()'
+        rule = '//*[@class="plhin first"]//td[@class="t_f"]//text()'
         content = response.xpath(rule).extract()
-        return ' '.join((' '.join(i.split()) for i in content)).replace('\\r', '')
+        return ''.join(content)
 
     def _get_phone(self, content):
         '''
@@ -117,4 +122,3 @@ class CnnbSpider(scrapy.Spider):
         if content:
             content = content.strip()
         return content
-
