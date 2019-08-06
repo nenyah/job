@@ -54,7 +54,6 @@ class CnnbSpider(scrapy.Spider):
         @param response 下载的网页内容
         return str 返回发贴人
         '''
-        print(response.text)
         rule = '//*[@class="authi"]/a/text()'
         return response.xpath(rule).extract_first()
         # return self._extract_info(rule, response)
